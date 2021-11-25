@@ -1,0 +1,92 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.10'
+    id 'jacoco'
+    id "org.sonarqube" version "3.3"
+}
+
+group 'com.epicteam'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+targetCompatibility = '16'
+sourceCompatibility = '16'
+
+ext {
+    junitVersion = '5.8.1'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+application {
+    mainModule = 'com.epicteam.mathgame'
+    mainClass = 'com.epicteam.mathgame.Main'
+}
+
+javafx {
+    version = '11.0.2'
+    modules = ['javafx.controls', 'javafx.fxml']
+}
+
+dependencies {
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+}
+
+test {
+    finalizedBy jacocoTestReport
+    useJUnitPlatform()
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        html.required = true
+        xml.required = true
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.7"
+    reportsDirectory = layout.buildDirectory.dir('reports/jacoco')
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.5
+            }
+        }
+
+        rule {
+            enabled = false
+            element = 'CLASS'
+            includes = ['org.gradle.*']
+
+            limit {
+                counter = 'LINE'
+                value = 'TOTALCOUNT'
+                maximum = 0.3
+            }
+        }
+    }
+}
+
+sonarqube {
+  properties {
+    property "sonar.projectKey", "Nikstanov_ProjectTrenager"
+    property "sonar.organization", "nikstanov"
+    property "sonar.host.url", "https://sonarcloud.io"
+    property "sonar.coverage.jacoco.xmlReportPaths", fileTree(include: ['jacoco*.xml'], dir: "$buildDir/reports/jacoco/test").collect()
+  }
+}
